@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Language Learning App</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: linear-gradient(to right, #fbc2eb, #a6c1ee);
+    text-align: center;
+    padding: 30px;
+}
+
+.container {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 380px;
+    margin: auto;
+    box-shadow: 0 0 10px gray;
+}
+
+button {
+    padding: 10px;
+    margin: 5px;
+    border: none;
+    background: #007bff;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+input {
+    padding: 8px;
+    margin: 5px;
+    width: 80%;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>Language Learning App</h2>
+    <p>Learn new words and test your knowledge</p>
+
+    <h3 id="word">Click Next to Start</h3>
+    <p id="meaning"></p>
+
+    <button onclick="showMeaning()">Show Meaning</button>
+    <button onclick="nextWord()">Next</button>
+
+    <hr>
+
+    <h3>Add New Word</h3>
+    <input id="newWord" placeholder="Enter word">
+    <input id="newMeaning" placeholder="Enter meaning">
+    <button onclick="addWord()">Add Word</button>
+</div>
+
+<script>
+let words = JSON.parse(localStorage.getItem("words")) || [
+    {word: "Hola", meaning: "Hello"},
+    {word: "Gracias", meaning: "Thank You"},
+    {word: "Amigo", meaning: "Friend"}
+];
+
+let index = 0;
+
+function nextWord() {
+    if (words.length === 0) {
+        document.getElementById("word").innerText = "No words available";
+        return;
+    }
+
+    if (index >= words.length) {
+        index = 0;
+    }
+
+    document.getElementById("word").innerText = words[index].word;
+    document.getElementById("meaning").innerText = "";
+    index++;
+}
+
+function showMeaning() {
+    if (index === 0) return;
+    document.getElementById("meaning").innerText = words[index - 1].meaning;
+}
+
+function addWord() {
+    let w = document.getElementById("newWord").value;
+    let m = document.getElementById("newMeaning").value;
+
+    if (w && m) {
+        words.push({word: w, meaning: m});
+        localStorage.setItem("words", JSON.stringify(words));
+
+        document.getElementById("newWord").value = "";
+        document.getElementById("newMeaning").value = "";
+
+        alert("Word added!");
+    } else {
+        alert("Enter both fields");
+    }
+}
+</script>
+
+</body>
+</html>
