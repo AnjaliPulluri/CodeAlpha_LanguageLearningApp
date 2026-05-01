@@ -1,113 +1,161 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Language Learning App</title>
+    <title>Language Learning App</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f0f2f5;
+            text-align: center;
+        }
 
-<style>
-body {
-    font-family: Arial;
-    background: linear-gradient(to right, #fbc2eb, #a6c1ee);
-    text-align: center;
-    padding: 30px;
-}
+        .container {
+            width: 400px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            margin-top: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px gray;
+        }
 
-.container {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    width: 380px;
-    margin: auto;
-    box-shadow: 0 0 10px gray;
-}
+        button, select, input {
+            margin: 5px;
+            padding: 8px;
+        }
 
-button {
-    padding: 10px;
-    margin: 5px;
-    border: none;
-    background: #007bff;
-    color: white;
-    border-radius: 5px;
-    cursor: pointer;
-}
+        .word {
+            font-size: 24px;
+            margin: 10px;
+        }
 
-button:hover {
-    background: #0056b3;
-}
-
-input {
-    padding: 8px;
-    margin: 5px;
-    width: 80%;
-}
-</style>
+        .meaning {
+            color: green;
+            margin: 10px;
+        }
+    </style>
 </head>
 
 <body>
 
 <div class="container">
     <h2>Language Learning App</h2>
-    <p>Learn new words and test your knowledge</p>
 
-    <h3 id="word">Click Next to Start</h3>
-    <p id="meaning"></p>
+    <select id="category">
+        <option value="vocab">Vocabulary</option>
+        <option value="phrases">Phrases</option>
+    </select>
 
-    <button onclick="showMeaning()">Show Meaning</button>
+    <div class="word" id="word">Click Next</div>
+    <div class="meaning" id="meaning"></div>
+
     <button onclick="nextWord()">Next</button>
+    <button onclick="showMeaning()">Show Meaning</button>
+    <button onclick="speakWord()">🔊 Speak</button>
 
     <hr>
 
     <h3>Add New Word</h3>
-    <input id="newWord" placeholder="Enter word">
-    <input id="newMeaning" placeholder="Enter meaning">
-    <button onclick="addWord()">Add Word</button>
+    <input type="text" id="newWord" placeholder="Word">
+    <input type="text" id="newMeaning" placeholder="Meaning">
+    <button onclick="addWord()">Add</button>
+
+    <hr>
+
+    <h3>Quiz</h3>
+    <div id="quizWord"></div>
+    <input type="text" id="answer" placeholder="Enter meaning">
+    <button onclick="checkAnswer()">Submit</button>
+    <div id="result"></div>
 </div>
 
 <script>
-let words = JSON.parse(localStorage.getItem("words")) || [
-    {word: "Hola", meaning: "Hello"},
-    {word: "Gracias", meaning: "Thank You"},
-    {word: "Amigo", meaning: "Friend"}
-];
+let data = JSON.parse(localStorage.getItem("langData")) || {
+    vocab: [
+        {word: "Hola", meaning: "Hello"},
+        {word: "Gracias", meaning: "Thank you"}
+    ],
+    phrases: [
+        {word: "Buenos dias", meaning: "Good morning"}
+    ]
+};
 
 let index = 0;
 
+function saveData() {
+    localStorage.setItem("langData", JSON.stringify(data));
+}
+
 function nextWord() {
-    if (words.length === 0) {
-        document.getElementById("word").innerText = "No words available";
-        return;
-    }
+    let category = document.getElementById("category").value;
+    let list = data[category];
 
-    if (index >= words.length) {
-        index = 0;
-    }
+    index = (index + 1) % list.length;
 
-    document.getElementById("word").innerText = words[index].word;
+    document.getElementById("word").innerText = list[index].word;
     document.getElementById("meaning").innerText = "";
-    index++;
 }
 
 function showMeaning() {
-    if (index === 0) return;
-    document.getElementById("meaning").innerText = words[index - 1].meaning;
+    let category = document.getElementById("category").value;
+    let list = data[category];
+
+    document.getElementById("meaning").innerText = list[index].meaning;
+}
+
+function speakWord() {
+    let text = document.getElementById("word").innerText;
+    let speech = new SpeechSynthesisUtterance(text);
+    speechSynthesis.speak(speech);
 }
 
 function addWord() {
-    let w = document.getElementById("newWord").value;
-    let m = document.getElementById("newMeaning").value;
+    let word = document.getElementById("newWord").value;
+    let meaning = document.getElementById("newMeaning").value;
+    let category = document.getElementById("category").value;
 
-    if (w && m) {
-        words.push({word: w, meaning: m});
-        localStorage.setItem("words", JSON.stringify(words));
-
-        document.getElementById("newWord").value = "";
-        document.getElementById("newMeaning").value = "";
-
-        alert("Word added!");
-    } else {
+    if (word === "" || meaning === "") {
         alert("Enter both fields");
+        return;
     }
+
+    data[category].push({word, meaning});
+    saveData();
+
+    alert("Word added!");
+
+    document.getElementById("newWord").value = "";
+    document.getElementById("newMeaning").value = "";
 }
+
+function loadQuiz() {
+    let category = document.getElementById("category").value;
+    let list = data[category];
+
+    let random = Math.floor(Math.random() * list.length);
+    window.quizIndex = random;
+
+    document.getElementById("quizWord").innerText = list[random].word;
+}
+
+function checkAnswer() {
+    let category = document.getElementById("category").value;
+    let list = data[category];
+
+    let userAnswer = document.getElementById("answer").value;
+    let correct = list[quizIndex].meaning;
+
+    if (userAnswer.toLowerCase() === correct.toLowerCase()) {
+        document.getElementById("result").innerText = "Correct!";
+    } else {
+        document.getElementById("result").innerText = "Wrong! Answer: " + correct;
+    }
+
+    document.getElementById("answer").value = "";
+    loadQuiz();
+}
+
+loadQuiz();
 </script>
 
 </body>
